@@ -24,7 +24,6 @@
 #include <string>
 #include <stdio.h>
 #include <stdlib.h>
-#include "strconv.h"
 
 /* Real Sense SDK 関連 */
 #include "pxcsensemanager.h"
