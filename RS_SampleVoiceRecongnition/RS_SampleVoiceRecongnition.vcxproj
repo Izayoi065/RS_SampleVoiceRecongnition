@@ -158,6 +158,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="strconv.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
