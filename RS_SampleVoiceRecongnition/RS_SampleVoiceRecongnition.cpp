@@ -7,58 +7,88 @@
 class MyHandler : public PXCSpeechRecognition::Handler {
 public:
 	virtual void PXCAPI OnRecognition(const PXCSpeechRecognition::RecognitionData *data) {
-		wprintf_s(L"Output: %s\n", data->scores[0].sentence);
+		wprintf_s(L"Output %s\n", data->scores[0].sentence);
 	}
+
 	virtual void PXCAPI OnAlert(const PXCSpeechRecognition::AlertData *data) {
-		if (data->label == PXCSpeechRecognition::ALERT_SPEECH_BEGIN)
+		if (data->label == PXCSpeechRecognition::ALERT_SPEECH_BEGIN) {
 			wprintf_s(L"Alert: SPEECH_BEGIN\n");
-		else if (data->label == PXCSpeechRecognition::ALERT_SPEECH_END)
+		}
+		else if (data->label == PXCSpeechRecognition::ALERT_SPEECH_END) {
 			wprintf_s(L"Alert: SPEECH_END\n");
+		}
+		else if (data->label == PXCSpeechRecognition::ALERT_VOLUME_LOW) {
+			wprintf_s(L"Alert: VOLUME_LOW\n");
+		}
 	}
 };
 
 int main()
 {
-	// Create and retrieve a session
+	std::locale::global(std::locale("japanese"));
+
 	PXCSession *session = PXCSession::CreateInstance();
-	if (session == NULL) {
+	if (session == nullptr) {
 		wprintf_s(L"Session not created by PXCSession\n");
 		return 1;
 	}
-	//Create an instance of the PXCSpeechRecognition
-	PXCSpeechRecognition *sr = 0;
+
+	PXCSpeechRecognition *sr = nullptr;
 	pxcStatus sts = session->CreateImpl<PXCSpeechRecognition>(&sr);
 	if (sts != pxcStatus::PXC_STATUS_NO_ERROR) {
 		wprintf_s(L"Failed to create an instance of the PXCSpeechRecognition\n");
 		return 2;
 	}
-	//Initialize the Module
+
 	PXCSpeechRecognition::ProfileInfo pinfo;
 	sr->QueryProfile(0, &pinfo);
+
+	pinfo.language = PXCSpeechRecognition::LanguageType::LANGUAGE_JP_JAPANESE;
+
 	sts = sr->SetProfile(&pinfo);
+
 	if (sts != pxcStatus::PXC_STATUS_NO_ERROR) {
 		wprintf_s(L"Failed to Configure the Module\n");
 		return 3;
 	}
-	//Set the Recognition mode
-	//command and control mode or dictation mode
+
 	sts = sr->SetDictation();
 	if (sts != pxcStatus::PXC_STATUS_NO_ERROR) {
-		wprintf_s(L"Failed to Set the Recognition mode \n");
+		wprintf_s(L"Failed to set the recognition mode\n");
 		return 4;
 	}
 
-	MyHandler handler; // handler for PXCSpeechRecognition
+	class MyHandler : public PXCSpeechRecognition::Handler {
+	public:
+		virtual void PXCAPI OnRecognition(const PXCSpeechRecognition::RecognitionData *data) {
+			wprintf_s(L"Output %s\n", data->scores[0].sentence);
+		}
 
-	//Start the speech recognition with the event handler
-	sts = sr->StartRec(NULL, &handler);
+		virtual void PXCAPI OnAlert(const PXCSpeechRecognition::AlertData *data) {
+			if (data->label == PXCSpeechRecognition::ALERT_SPEECH_BEGIN) {
+				wprintf_s(L"Alert: SPEECH_BEGIN\n");
+			}
+			else if (data->label == PXCSpeechRecognition::ALERT_SPEECH_END) {
+				wprintf_s(L"Alert: SPEECH_END\n");
+			}
+			else if (data->label == PXCSpeechRecognition::ALERT_VOLUME_LOW) {
+				wprintf_s(L"Alert: VOLUME_LOW\n");
+			}
+		}
+	};
+
+	MyHandler handler;
+
+	sts = sr->StartRec(nullptr, &handler);
 	if (sts != pxcStatus::PXC_STATUS_NO_ERROR) {
-		wprintf_s(L"Failed to Start the handler \n");
+		wprintf_s(L"Failed to start the handler\n");
 		return 5;
 	}
-	while (true) { if (GetAsyncKeyState(VK_ESCAPE)) break; } //looping infinitely until escape is pressed
-	//Stop the event handler that handles the speech recognition
-	sr->StopRec();
 
+	while (true) {
+		if (GetAsyncKeyState(VK_ESCAPE)) break;
+	}
+
+	sr->StopRec();
 	return 0;
 }
